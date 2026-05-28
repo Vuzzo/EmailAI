@@ -17,27 +17,36 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "Sei un assistente che scrive email professionali."
+            content: "Sei un assistente che scrive email professionali chiare e utili."
           },
           {
             role: "user",
             content: `Scrivi una email con tono ${tone} basata su questi appunti:\n${input}`
           }
-        ]
+        ],
+        temperature: 0.7
       })
     });
 
     const data = await response.json();
 
-    // 🔥 DEBUG IMPORTANTE
-    console.log("OPENAI RESPONSE:", JSON.stringify(data));
+    // 🔥 LOG IMPORTANTE
+    console.log("OPENAI FULL RESPONSE:", JSON.stringify(data, null, 2));
+
+    // ❗ CONTROLLO ERRORI OPENAI
+    if (data.error) {
+      return res.status(500).json({
+        error: "OpenAI error",
+        details: data.error
+      });
+    }
 
     const email = data?.choices?.[0]?.message?.content;
 
     if (!email) {
       return res.status(500).json({
-        error: "No email returned",
-        debug: data
+        error: "No email generated",
+        raw: data
       });
     }
 
