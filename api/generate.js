@@ -17,11 +17,11 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "Sei un assistente che scrive email professionali chiare e utili."
+            content: "Sei un assistente che scrive email professionali semplici e chiare."
           },
           {
             role: "user",
-            content: `Scrivi una email con tono ${tone} basata su questi appunti:\n${input}`
+            content: `Scrivi una email con tono ${tone} basata su questo testo:\n${input}`
           }
         ],
         temperature: 0.7
@@ -30,22 +30,23 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // 🔥 LOG IMPORTANTE
-    console.log("OPENAI FULL RESPONSE:", JSON.stringify(data, null, 2));
+    // 🔥 QUESTO È IL PUNTO CRITICO
+    console.log("OPENAI RESPONSE:", data);
 
-    // ❗ CONTROLLO ERRORI OPENAI
-    if (data.error) {
+    // ❗ SE OPENAI FALLISCE, LO VEDIAMO SUBITO
+    if (!response.ok) {
       return res.status(500).json({
-        error: "OpenAI error",
-        details: data.error
+        error: "OpenAI request failed",
+        details: data
       });
     }
 
+    // 🔥 ESTRAZIONE SICURA
     const email = data?.choices?.[0]?.message?.content;
 
     if (!email) {
       return res.status(500).json({
-        error: "No email generated",
+        error: "Empty response from OpenAI",
         raw: data
       });
     }
