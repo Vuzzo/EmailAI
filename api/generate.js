@@ -5,10 +5,6 @@ export default async function handler(req, res) {
 
   const { input, tone } = req.body;
 
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-  }
-
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -21,11 +17,11 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "Sei un assistente che trasforma appunti in email professionali chiare, utili e ben scritte."
+            content: "Sei un assistente che scrive email professionali."
           },
           {
             role: "user",
-            content: `Scrivi un'email dal tono ${tone} basata su questi appunti:\n\n${input}`
+            content: `Scrivi una email con tono ${tone} basata su questi appunti:\n${input}`
           }
         ]
       })
@@ -33,15 +29,23 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return res.status(500).json({ error: data });
-    }
+    // 🔥 DEBUG IMPORTANTE
+    console.log("OPENAI RESPONSE:", JSON.stringify(data));
 
     const email = data?.choices?.[0]?.message?.content;
+
+    if (!email) {
+      return res.status(500).json({
+        error: "No email returned",
+        debug: data
+      });
+    }
 
     return res.status(200).json({ email });
 
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message
+    });
   }
 }
