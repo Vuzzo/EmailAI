@@ -1,29 +1,31 @@
 export default async function handler(req, res) {
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Only POST allowed" });
   }
 
   const { input, tone } = req.body;
 
-  try {
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
+  }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
+        model: "gpt-4o-mini",
         messages: [
           {
-            role: 'system',
-            content: `Sei un assistente che trasforma appunti in email professionali dal tono ${tone}.`
+            role: "system",
+            content: "Sei un assistente che trasforma appunti in email professionali chiare, utili e ben scritte."
           },
           {
-            role: 'user',
-            content: input
+            role: "user",
+            content: `Scrivi un'email dal tono ${tone} basata su questi appunti:\n\n${input}`
           }
         ]
       })
@@ -31,16 +33,15 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const email = data.choices[0].message.content;
+    if (!response.ok) {
+      return res.status(500).json({ error: data });
+    }
 
-    res.status(200).json({ email });
+    const email = data?.choices?.[0]?.message?.content;
+
+    return res.status(200).json({ email });
 
   } catch (error) {
-
-    console.error(error);
-
-    res.status(500).json({
-      error: 'Errore server'
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
