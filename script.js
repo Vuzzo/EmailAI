@@ -1,36 +1,37 @@
 async function generateEmail() {
-
   const input = document.getElementById("input").value;
   const tone = document.getElementById("tone").value;
+  const output = document.getElementById("output");
 
   if (!input) {
-    alert("Scrivi qualcosa prima.");
+    alert("Scrivi qualcosa prima");
     return;
   }
 
-  document.getElementById("output").innerText = "Generazione in corso...";
+  output.innerText = "Generazione in corso...";
 
   try {
-
     const response = await fetch("/api/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        input,
-        tone
+        input: input,
+        tone: tone
       })
     });
 
     const data = await response.json();
 
-    document.getElementById("output").innerText = data.email;
+    if (data.email) {
+      output.innerText = data.email;
+    } else {
+      output.innerText = "Errore: nessuna email ricevuta";
+    }
 
   } catch (error) {
-
-    document.getElementById("output").innerText = "Errore durante la generazione.";
-
     console.error(error);
+    output.innerText = "Errore durante la generazione";
   }
 }
